@@ -20,7 +20,12 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <SocketsProvider>
-      <MantineProvider theme={{ colorScheme: 'dark', fontFamily: inter.style.fontFamily }} withGlobalStyles withNormalizeCSS>
+      <MantineProvider theme={{
+        colorScheme: 'dark',
+        fontFamily: inter.style.fontFamily,
+        defaultGradient: { from: 'cornflowerblue', to: 'rgb(255,0,212)', deg: 45 }
+
+      }} withGlobalStyles withNormalizeCSS>
         <Component {...pageProps} />
       </MantineProvider>
     </SocketsProvider>

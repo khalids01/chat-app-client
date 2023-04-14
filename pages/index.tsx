@@ -1,27 +1,116 @@
 import Head from 'next/head'
-import Image from 'next/image'
-import { useState } from 'react';
+import { useLocalStorage } from '@mantine/hooks'
+import { useEffect, useRef, useState } from 'react';
 import {
   AppShell,
   Navbar,
   Header,
-  Footer,
   Aside,
+  Paper,
   Text,
   MediaQuery,
   Burger,
   useMantineTheme,
+  Button,
+  Container,
+  Stack,
+  TextInput,
+  Title,
+  createStyles,
+  Box,
+  Group
 } from '@mantine/core';
 
 import { useSockets } from '@/context/socket.context';
+import Rooms from '@/components/rooms/Rooms';
+import Messages from '@/components/messages/Messages';
 
+const useStyles = createStyles((theme) => ({
+  main: {
+    minHeight: '100vh',
+    width: '100%',
+    display: 'grid',
+    placeItems: 'center'
+  },
+  form: {
+    backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[4] : 'rgb(250,250,255)',
+    padding: '35px 25px',
+    borderRadius: 12,
+    boxShadow: '0px 0px 15px rgba(7,35,53,0.15)'
+
+  },
+  label: {
+    marginBottom: 10
+  },
+  input: {
+    background: theme.colorScheme === 'dark' ? 'rgb(45,46,49)' : 'rgb(237,244,250)'
+  }
+}))
 
 
 export default function Home() {
 
+  const { classes } = useStyles()
   const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
-  const {socket} = useSockets()
+  const { socket, username, setUsername } = useSockets()
+  const usernameRef = useRef<HTMLInputElement>(null)
+  const [name, setName] = useLocalStorage({ key: 'username', defaultValue: '' })
+  function handleSetUsername(e: any) {
+    e.preventDefault()
+    const value = usernameRef?.current?.value;
+
+    if (!value) {
+      return
+    }
+    setName(value)
+
+  }
+
+  useEffect(() => {
+    setUsername(name)
+  }, [name])
+
+  if (!username) {
+    return (
+      <Container size={'sm'} h='90vh' display={'grid'} sx={{ placeItems: 'center' }}>
+        <Paper shadow='lg'>
+          <form className={classes.form} onSubmit={handleSetUsername}>
+            <Title size={24} weight={500} align="center" mb={'xl'} variant="gradient">
+              Meet new people!
+            </Title>
+            <Stack spacing={20} miw={350}>
+              <TextInput
+                ref={usernameRef}
+                variant={'filled'}
+                required
+                withAsterisk={false}
+                size='md'
+                label={
+                  <Text variant='gradient'>
+                    Username *
+                  </Text>
+                }
+                classNames={{
+                  label: classes.label,
+                  input: classes.input
+                }}
+                placeholder="Enter your username"
+              />
+              <Button
+                gradient={{ from: 'cornflowerblue', to: 'rgb(255,0,212)', deg: 45 }}
+                variant="gradient"
+                size="md"
+                type='submit'
+              >
+                Join
+              </Button>
+            </Stack>
+          </form>
+        </Paper>
+      </Container>
+    )
+  }
 
   return (
     <>
@@ -32,6 +121,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <AppShell
+        padding={0}
         styles={{
           main: {
             background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
@@ -40,22 +130,17 @@ export default function Home() {
         navbarOffsetBreakpoint="sm"
         asideOffsetBreakpoint="sm"
         navbar={
-          <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
-            <Text>Application navbar</Text>
+          <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 300, lg: 350 }}>
+            <Rooms />
           </Navbar>
         }
-        aside={
-          <MediaQuery smallerThan="sm" styles={{ display: 'none' }}>
-            <Aside p="md" hiddenBreakpoint="sm" width={{ sm: 200, lg: 300 }}>
-              <Text>Application sidebar</Text>
-            </Aside>
-          </MediaQuery>
-        }
-        footer={
-          <Footer height={60} p="md">
-            Application footer
-          </Footer>
-        }
+        // aside={
+        //   <MediaQuery smallerThan="sm" styles={{ display: 'none' }}>
+        //     <Aside p="md" hiddenBreakpoint="sm" width={{ sm: 200, lg: 300 }}>
+        //       <Text>Application sidebar</Text>
+        //     </Aside>
+        //   </MediaQuery>
+        // }
         header={
           <Header height={{ base: 50, md: 70 }} p="md">
             <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
@@ -68,13 +153,18 @@ export default function Home() {
                   mr="xl"
                 />
               </MediaQuery>
-
-              <Text>Application header</Text>
+              <Group position='apart' w='100%'>
+                <Text variant='gradient' size='xl'>{username}</Text>
+                <Button variant='filled' color='gray' onClick={() => setName('')}>
+                  Leave
+                </Button>
+              </Group>
             </div>
           </Header>
         }
+
       >
-        <Text>{socket.id}</Text>
+        <Messages />
       </AppShell>
     </>
   )
